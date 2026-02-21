@@ -2,8 +2,8 @@
 #include "pico/stdlib.h"
 #include <stdio.h>
 
-const int BTN_PIN_1 = 7;
-const int BTN_PIN_2 = 26;
+const int BTN_PIN_1 = 26;
+const int BTN_PIN_2 = 7;
 
 int main() {
   stdio_init_all();

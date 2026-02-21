@@ -32,14 +32,14 @@ int main() {
         const bool btn_2 = gpio_get(BTN_PIN_2);
 
         if (last_btn_1 && !btn_1 && (now_ms - last_press_1_ms >= DEBOUNCE_MS)) {
-            cnt_1++;
             printf("Botao 1: %d\n", cnt_1);
+            cnt_1++;
             last_press_1_ms = now_ms;
         }
 
         if (last_btn_2 && !btn_2 && (now_ms - last_press_2_ms >= DEBOUNCE_MS)) {
-            cnt_2++;
             printf("Botao 2: %d\n", cnt_2);
+            cnt_2++;
             last_press_2_ms = now_ms;
         }
 
