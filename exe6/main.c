@@ -12,18 +12,17 @@ static volatile uint8_t counter = 0;
 static volatile bool counter_changed = false;
 static volatile uint32_t last_press_ms = 0;
 
-// This array converts a number 0-9 to a bit pattern to send to the GPIOs
 static const uint8_t bits[10] = {
-    0x3f,  // 0
-    0x06,  // 1
-    0x5b,  // 2
-    0x4f,  // 3
-    0x66,  // 4
-    0x6d,  // 5
-    0x7d,  // 6
-    0x07,  // 7
-    0x7f,  // 8
-    0x67   // 9
+    0x3f,  
+    0x06,  
+    0x5b,  
+    0x4f,  
+    0x66,  
+    0x6d,  
+    0x7d,  
+    0x07,  
+    0x7f,  
+    0x67   
 };
 
 static void seven_seg_init(void) {
