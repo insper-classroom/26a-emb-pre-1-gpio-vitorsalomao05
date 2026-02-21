@@ -1,17 +1,19 @@
-#include <stdio.h>
-
 #include "hardware/gpio.h"
 #include "pico/stdlib.h"
+#include <stdbool.h>
+#include <stdint.h>
+#include <stdio.h>
 
-int FIRST_GPIO = 2;
-const int BTN_PIN_G = 28;
+static const uint FIRST_GPIO = 2;
+static const uint BTN_PIN_G = 28;
+static const uint32_t DEBOUNCE_MS = 40;
 
-int BUTTON_GPIO;
-int cnt;
-int last_btn; // Button not pressed (pulled up)
+static volatile uint8_t counter = 0;
+static volatile bool counter_changed = false;
+static volatile uint32_t last_press_ms = 0;
 
 // This array converts a number 0-9 to a bit pattern to send to the GPIOs
-int bits[10] = {
+static const uint8_t bits[10] = {
     0x3f,  // 0
     0x06,  // 1
     0x5b,  // 2
@@ -24,45 +26,58 @@ int bits[10] = {
     0x67   // 9
 };
 
-void seven_seg_init() {
+static void seven_seg_init(void) {
     for (int gpio = FIRST_GPIO; gpio < FIRST_GPIO + 7; gpio++) {
         gpio_init(gpio);
         gpio_set_dir(gpio, GPIO_OUT);
     }
 }
 
-void seven_seg_display() {
-    int value = bits[cnt];
+static void seven_seg_display(uint8_t value_index) {
+    uint8_t value = bits[value_index];
+
     for (int i = 0; i < 7; i++) {
         int gpio = FIRST_GPIO + i;
-        int bit = (value >> i) & 1;
+        int bit = (value >> i) & 1u;
         gpio_put(gpio, bit);
     }
 }
 
-int main() {
-    stdio_init_all();
-    int aux = 0;
+static void on_button_press(uint gpio, uint32_t events) {
+    (void)gpio;
 
-    BUTTON_GPIO = FIRST_GPIO + 7;
+    if ((events & GPIO_IRQ_EDGE_FALL) == 0u) {
+        return;
+    }
+
+    uint32_t now_ms = to_ms_since_boot(get_absolute_time());
+    if ((now_ms - last_press_ms) < DEBOUNCE_MS) {
+        return;
+    }
+
+    last_press_ms = now_ms;
+    counter = (uint8_t)((counter + 1u) % 10u);
+    counter_changed = true;
+}
+
+int main(void) {
+    stdio_init_all();
 
     gpio_init(BTN_PIN_G);
     gpio_set_dir(BTN_PIN_G, GPIO_IN);
     gpio_pull_up(BTN_PIN_G);
 
     seven_seg_init();
-    seven_seg_display(2);
+    seven_seg_display(counter);
+    gpio_set_irq_enabled_with_callback(BTN_PIN_G, GPIO_IRQ_EDGE_FALL, true, &on_button_press);
 
     while (true) {
-        int btn = gpio_get(BTN_PIN_G);
-        if (last_btn && !btn) { // Detect falling edge (press)
-            if (++cnt > 9) {
-                cnt = 0;
-            }
-            seven_seg_display();
-            printf("cnt: %l\n", cnt);
+        if (counter_changed) {
+            counter_changed = false;
+            seven_seg_display(counter);
+            printf("cnt: %u\n", (unsigned int)counter);
         }
-        last_btn = btn;
-        sleep_ms(10); // Polling interval
+
+        sleep_ms(10);
     }
 }

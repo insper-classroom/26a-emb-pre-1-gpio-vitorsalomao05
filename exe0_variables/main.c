@@ -1,18 +1,20 @@
-#include "stdio.h"
+#include <stdbool.h>
 
-int a = 0; // var global
-int b = 0; // var global
-
-void foo(void) {
-    a = a + 1; // acessa variavel global
+static int increment(int value) {
+    return value + 1;
 }
 
-void main(void) {
-    while (1) {
-        foo();
-        
+int main(void) {
+    int a = 0;
+    bool threshold_reached = false;
+
+    while (!threshold_reached) {
+        a = increment(a);
+
         if (a > 5) {
-            b = 1;
+            threshold_reached = true;
         }
     }
+
+    return 0;
 }
